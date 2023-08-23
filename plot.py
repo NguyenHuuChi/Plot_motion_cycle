@@ -6,6 +6,7 @@ import linecache
 import numpy as np
 import seaborn as sns
 from tkinter import filedialog
+import os
 
 # Function read the file contain specific time ; start and end is the start and the end of row want to read
 def read_file_time(path, start=1 ,end=4) :
@@ -385,7 +386,7 @@ def interp_shampe_many_data(list_data_cycle):
 
 
 # interp_data_cycle
-def plot_average_with_error(interp_data_cycle,split_cycle,title1):
+def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder):
     #calculate the average of period
     average_split_cycle_left = np.mean(split_cycle[0], axis=0)
     average_split_cycle_right = np.mean(split_cycle[1], axis=0)
@@ -438,33 +439,59 @@ def plot_average_with_error(interp_data_cycle,split_cycle,title1):
     plt.ylabel('Angle (degree)',size=16, labelpad=25)
     plt.title(title1,size=20)
     plt.legend()
-    plt.show()
-def plot_all_data(All_data):
+    # Create the save folder if it doesn't exist
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+    
+    # Construct the full file path
+    filename = os.path.join(save_folder, title1.replace("/", "_") + ".png")
+    
+    # Save the plot as an image
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close()  # Close the plot to free up resources
+    # plt.show()
+def plot_all_data(All_data,folder):
     index=0
     list_key=list(All_data.keys())
+    subfolder_name = "GraphXXXXXXXXX" 
+    subfolder_path = os.path.join(folder, subfolder_name)
     while index < len(list_key) -1 :
         key_left=list_key[index]
         key_right= list_key[index+1]
-        for i in range(len(All_data[list_key[index]])-1) :
-            if i==0:
-                title= key_left[1:] +"_flex"
-            elif i ==1 :
-                title=key_left[1:]+"_ab"
-            elif i==2 :
-                title=key_left[1:]+ "_rotation"
-            left_leg= interp_shampe_many_data(All_data[key_left][i])
-            right_leg=interp_shampe_many_data(All_data[key_right][i])
+        if key_left[1:]== "PelvisAngles" :
+            for i in range(len(All_data[list_key[index]])-1) :
+                if i==0:
+                    title= key_left[1:] +"_tilt"
+                elif i ==1 :
+                    title=key_left[1:]+"_obliquity"
+                elif i==2 :
+                    title=key_left[1:]+ "_rotation"
+                left_leg= interp_shampe_many_data(All_data[key_left][i])
+                right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-            plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path)
+        else :
+
+            for i in range(len(All_data[list_key[index]])-1) :
+                if i==0:
+                    title= key_left[1:] +"_flex/ext"
+                elif i ==1 :
+                    title=key_left[1:]+"_ab/add"
+                elif i==2 :
+                    title=key_left[1:]+ "_rotation"
+                left_leg= interp_shampe_many_data(All_data[key_left][i])
+                right_leg=interp_shampe_many_data(All_data[key_right][i])
+
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path)
         index+=2
 
 
 # This function will take the mean value of angle of each type of angle and transfer them to the csv file
-def export_data(All_data,list_file): #type of All_data is dic which out put of read_data function
+def export_data(All_data,list_file,folder_path): #type of All_data is dic which out put of read_data function
     data_aframe={}
     data_start_of_phase={}
-    path_data = list_file[0][:-6]+"_averge_std.csv"
-    path_data_start=list_file[0][:-6]+"start_of_phase.csv"
+    path_data = os.path.join(folder_path, list_file[0][:-6] + "_averge_std.csv")
+    path_data_start = os.path.join(folder_path, list_file[0][:-6] + "start_of_phase.csv")
     for key in All_data.keys():
         for i in range(len(All_data[key])-1) :
             data_key = interp_shampe_many_data(All_data[key][i])

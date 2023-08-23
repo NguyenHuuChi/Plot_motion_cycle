@@ -38,7 +38,7 @@ def find_not_zero(ind_start, arr):
     return i
 
 #---------------Function process data ----------------------------
-def process_file(file_path,mass):
+def process_file(file_path,mass=60):
     
     # mass=60
     data = pd.read_csv(file_path,skiprows=3)

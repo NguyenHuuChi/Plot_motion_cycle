@@ -458,11 +458,11 @@ def plot_all_data(All_data):
     for key in All_data.keys():
         for i in range(len(All_data[key])-1):
                 if i==0:
-                    title= key +"_flex"
+                    title= key +"_flex_abc"
                 elif i ==1 :
-                    title=key+"_ab"
+                    title=key+"_ab_abc"
                 elif i==2 :
-                    title=key+ "_rotation"
+                    title=key+ "_rotation_abc"
                 All_data[key][i]=interp_shampe_many_data(All_data[key][i])
 
                 plot_average_with_error(All_data[key][i],All_data[key][-1],title)

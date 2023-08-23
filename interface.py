@@ -6,6 +6,7 @@ import os
 
 from plot import read_data ,plot_all_data, export_data, calculate_the_different_time
 from Classify_period import process_file
+import time
 
 def xlsx_to_csv():
     try:
@@ -33,52 +34,80 @@ def xlsx_to_csv():
     except Exception as e:
         print("Error occurred during conversion:", e)
 
-def open_file():
-    file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("XLSX files", "*.xlsx")])
-    mass = int(mass_entry.get())
-    process_file(file_path,mass)
+# def open_file():
+#     file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv"), ("XLSX files", "*.xlsx")])
+#     mass = int(mass_entry.get())
+#     process_file(file_path,mass)
 
 
 
-path_left =""
-def read_path_left():
-    global path_left
-    path_left=filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
-
-path_right=''
-def read_path_right():
-    global path_right
-    path_right=filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
-
-
-def Select_processed_left_right_file():
-    read_path_left()
-    read_path_right()
-
-List_file_run =[]
-def open_multiple_file():
-    global List_file_run
-    list_pat = filedialog.askopenfilenames(filetypes=[("CSV files","*.csv")])
-    List_file_run= list(list_pat)
-    print(List_file_run)
-
-file_different_time=''
-def open_single_file():
-    global file_different_time
-    file_different_time= filedialog.askopenfilename(filetypes=[("CSV files","*.csv")])
     
-
+List_file_run = []
+path_right = ""
+path_left = ""
+folder_path=''
+def find_files_with_text(directory, text):
+    matching_files = []
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if text in file:
+                matching_files.append(os.path.join(root, file))
+    return matching_files
 def plot_data():
-    different_time= calculate_the_different_time(file_different_time,100)
+    
     a= len(List_file_run)
     All_data= read_data(different_time[:a],List_file_run,["Hip","Knee","Pelvis"],path_left,path_right)
-    plot_all_data(All_data)
+    plot_all_data(All_data,folder_path)
 
 def export_data_to_csvfile():
-    different_time= calculate_the_different_time(file_different_time,100)
+    # different_time= calculate_the_different_time(file_different_time,100)
     a= len(List_file_run)
     All_data= read_data(different_time[:a],List_file_run,["Hip","Knee"],path_left,path_right)
-    export_data(All_data,List_file_run)
+    export_data(All_data,List_file_run,folder_path)
+file_different_time = None
+def main_function():
+    global List_file_run, path_right, path_left,different_time ,folder_path # Use the global variables
+
+    # Step 1: Choose a directory using file dialog
+    folder_path = filedialog.askdirectory()
+
+    # Step 2: Find the file with "MR3" and get its directory
+    
+    for file in os.listdir(folder_path):
+        if "MR3" in file and file.endswith(".csv"):
+            file_different_time = os.path.join(folder_path, file)
+            break
+    
+    if file_different_time:
+        # Step 3: Process the initial MR3 file
+        mass = int(mass_entry.get())
+        process_file(file_different_time, mass)
+        different_time= calculate_the_different_time(file_different_time,100)
+       
+        # Step 4: Find the processed right and left leg files
+        file_prefix = os.path.splitext(file_different_time)[0]
+        print("File Prefix:", file_prefix)
+        processed_right_leg_files = find_files_with_text(folder_path, "__right_leg_processed__")
+        print("Processed Right Leg Files:", processed_right_leg_files)
+        if processed_right_leg_files:
+            path_right = processed_right_leg_files[0]
+        else:
+            print("No processed right leg file found.")
+
+        processed_left_leg_files = find_files_with_text(folder_path, "__left_leg_processed__")
+        print("Processed Left Leg Files:", processed_left_leg_files)
+        if processed_left_leg_files:
+            path_left = processed_left_leg_files[0]
+        else:
+            print("No processed left leg file found.")
+        
+        # Step 5: Find and append Nexus files to the list
+        List_file_run = find_files_with_text(folder_path, "Nexus")
+        print(List_file_run)
+    else:
+        print("No matching MR3 file found.")
+    plot_data()
+    export_data_to_csvfile()
 # Create the main window
 
 # Create the main window
@@ -88,35 +117,16 @@ window.geometry("400x300")
 # Create tab control
 tab_control = ttk.Notebook(window)
 
-# Create "Classify Period" tab
-classify_period_frame = ttk.Frame(tab_control)
-tab_control.add(classify_period_frame, text="Classify Period")
 
 # Create widgets for "Classify Period" tab
-button_select_file = tk.Button(classify_period_frame, text="Transfer to csv file", command=xlsx_to_csv)
+button_select_file = tk.Button( text="Transfer to csv file", command=xlsx_to_csv)
 button_select_file.pack()
-mass_label = tk.Label(classify_period_frame, text="Enter mass (kg):")
+mass_label = tk.Label( text="Enter mass (kg):")
 mass_label.pack()
-mass_entry = tk.Entry(classify_period_frame)
+mass_entry = tk.Entry()
 mass_entry.pack(anchor="center", pady=10)
-button_select_file = tk.Button(classify_period_frame, text="Select CSV File", command=open_file)
-button_select_file.pack(anchor="center")
-
-# Create "Export and Plot Data" tab
-export_plot_frame = ttk.Frame(tab_control)
-tab_control.add(export_plot_frame, text="Export and Plot Data")
-
-# Create widgets for "Export and Plot Data" tab
-button_select_processed_file = tk.Button(export_plot_frame, text="Select Processed Left/Right File", command=Select_processed_left_right_file)
-button_select_processed_file.pack()
-button_select_single_file = tk.Button(export_plot_frame, text="Select File Containing Different Time", command=open_single_file)
-button_select_single_file.pack()
-button_select_multiple_files = tk.Button(export_plot_frame, text="Select List of Running Files", command=open_multiple_file)
-button_select_multiple_files.pack()
-button_plot_data = tk.Button(export_plot_frame, text="Plot", command=plot_data)
-button_plot_data.pack()
-button_export_data = tk.Button(export_plot_frame, text="Export Data", command=export_data_to_csvfile)
-button_export_data.pack()
+button_select_file = tk.Button( text="Select The Folder", command=main_function)
+button_select_file.pack()
 
 # Pack the tab control
 tab_control.pack(expand=True, fill=tk.BOTH)
