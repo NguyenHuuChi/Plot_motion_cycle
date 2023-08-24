@@ -56,13 +56,13 @@ def find_files_with_text(directory, text):
 def plot_data():
     
     a= len(List_file_run)
-    All_data= read_data(different_time[:a],List_file_run,["Hip","Knee","Pelvis"],path_left,path_right)
+    All_data= read_data(different_time[:a],List_file_run,["Hip","Knee","Pelvis","Ankle"],path_left,path_right)
     plot_all_data(All_data,folder_path)
 
 def export_data_to_csvfile():
     # different_time= calculate_the_different_time(file_different_time,100)
     a= len(List_file_run)
-    All_data= read_data(different_time[:a],List_file_run,["Hip","Knee"],path_left,path_right)
+    All_data= read_data(different_time[:a],List_file_run,["Hip","Knee","Pelvis","Ankle"],path_left,path_right)
     export_data(All_data,List_file_run,folder_path)
 file_different_time = None
 def main_function():
@@ -80,8 +80,12 @@ def main_function():
     
     if file_different_time:
         # Step 3: Process the initial MR3 file
-        mass = int(mass_entry.get())
-        process_file(file_different_time, mass)
+        mass = mass_entry.get()
+        if mass:
+            mass=int(mass)
+            process_file(file_different_time, mass)
+        else:
+            process_file(file_different_time)
         different_time= calculate_the_different_time(file_different_time,100)
        
         # Step 4: Find the processed right and left leg files

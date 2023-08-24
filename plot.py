@@ -386,7 +386,7 @@ def interp_shampe_many_data(list_data_cycle):
 
 
 # interp_data_cycle
-def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder):
+def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder,subfolder_name_std):
     #calculate the average of period
     average_split_cycle_left = np.mean(split_cycle[0], axis=0)
     average_split_cycle_right = np.mean(split_cycle[1], axis=0)
@@ -394,6 +394,8 @@ def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder):
     # Calculate the average and standard error
     average_left = np.mean(interp_data_cycle[0], axis=0)
     average_right = np.mean(interp_data_cycle[1], axis=0)
+    std_left =np.std(interp_data_cycle[0], axis=0)
+    std_right=np.std(interp_data_cycle[1], axis=0)
     
     phase_labels =["Stance phase","Initial swing","Mid swing", "Termial swing"]
     # Create x-axis values
@@ -435,9 +437,9 @@ def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder):
     plt.fill_between(x_right, np.min(interp_data_cycle[1], axis=0), np.max(interp_data_cycle[1], axis=0), color='lightblue', alpha=0.2)
     sns.lineplot(x=x_right, y=average_right, color='blue', label='Average right')
     # plt.fill_between(x, average - std_devi, average + std_devi, color='lightblue', alpha=0.4, label='Standard deviation')
-    plt.xlabel('Nomalized (percent)',size=16)
-    plt.ylabel('Angle (degree)',size=16, labelpad=25)
-    plt.title(title1,size=20)
+    plt.xlabel('Nomalized (percent)',size=20)
+    plt.ylabel('Angle (degree)',size=20, labelpad=25)
+    plt.title(title1,size=25)
     plt.legend()
     # Create the save folder if it doesn't exist
     if not os.path.exists(save_folder):
@@ -449,11 +451,60 @@ def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder):
     # Save the plot as an image
     plt.savefig(filename, bbox_inches='tight')
     plt.close()  # Close the plot to free up resources
-    # plt.show()
+    
+    #----------------------fill with standard--------------------------------------------------------------------------------
+    plt.figure(figsize=(10, 6))
+    for i, a in enumerate(average_split_cycle_left):
+        plt.axvline(x=a , color='red', linestyle='-')
+    for i, a in enumerate(average_split_cycle_right):
+        plt.axvline(x=a , color='blue', linestyle='-')
+    # Add phase labels to the graph
+    plt.axhline(y=0,color='red',linestyle='-')
+    bottom = min(0,np.min(average_left),np.min(average_right))
+    peak=max(np.max(average_left),np.max(average_right))
+    if bottom==0 :
+        y_offset=bottom-(peak-bottom)/25
+    else :
+        y_offset=bottom-(peak-bottom)/25
+    for i, label in enumerate(phase_labels):
+        if i > 0:
+            plt.text(average_split_cycle_left[i - 1], y_offset, label, color='red', ha='left')
+        else:
+            plt.text(0, y_offset, label, color='red', ha='left')
+    custom_xticks = np.arange(0, 101)
+    custom_xticklabels=[]
+    for i in range (10):
+        custom_xticklabels.append(10*i)
+        custom_xticklabels.extend(['']*9)
+        # custom_xticklabels.
+    custom_xticklabels.append(100)
+    plt.xticks(custom_xticks, custom_xticklabels)
+
+    plt.fill_between(x_left,-std_left+average_left , std_left+average_left, color='pink', alpha=0.2)
+    sns.lineplot(x=x_left, y=average_left, color='red', label='Average left')
+    plt.fill_between(x_right,-std_right+average_right,std_right+average_right, color='lightblue', alpha=0.2)
+    sns.lineplot(x=x_right, y=average_right, color='blue', label='Average right')
+    # plt.fill_between(x, average - std_devi, average + std_devi, color='lightblue', alpha=0.4, label='Standard deviation')
+    plt.xlabel('Nomalized (percent)',size=20)
+    plt.ylabel('Angle (degree)',size=20, labelpad=25)
+    plt.title(f"{title1}_STD",size=25)
+    plt.legend()
+    # Create the save folder if it doesn't exist
+    if not os.path.exists(subfolder_name_std):
+        os.makedirs(subfolder_name_std)
+    
+    # Construct the full file path
+    filename = os.path.join(subfolder_name_std, f"{title1}_STD".replace("/", "_") + ".png")
+    
+    # Save the plot as an image
+    plt.savefig(filename, bbox_inches='tight')
+    plt.close()  
+
 def plot_all_data(All_data,folder):
     index=0
     list_key=list(All_data.keys())
     subfolder_name = "GraphXXXXXXXXX" 
+    subfolder_name_std="GraphXXXXXXXX__STD"
     subfolder_path = os.path.join(folder, subfolder_name)
     while index < len(list_key) -1 :
         key_left=list_key[index]
@@ -469,7 +520,19 @@ def plot_all_data(All_data,folder):
                 left_leg= interp_shampe_many_data(All_data[key_left][i])
                 right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
+        elif key_left[1:]== "AnkleAngles" :
+            for i in range(len(All_data[list_key[index]])-1) :
+                if i==0:
+                    title= key_left[1:] +"_dorsi/plantar"
+                elif i ==1 :
+                    title=key_left[1:]+"_ab/add"
+                elif i==2 :
+                    title=key_left[1:]+ "_rotation"
+                left_leg= interp_shampe_many_data(All_data[key_left][i])
+                right_leg=interp_shampe_many_data(All_data[key_right][i])
+
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
         else :
 
             for i in range(len(All_data[list_key[index]])-1) :
@@ -482,7 +545,7 @@ def plot_all_data(All_data,folder):
                 left_leg= interp_shampe_many_data(All_data[key_left][i])
                 right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
         index+=2
 
 
@@ -518,16 +581,18 @@ def export_data(All_data,list_file,folder_path): #type of All_data is dic which 
         writer = csv.writer(file)
 
         # Write the first header line
-        row_header1=[]
+        row_header1=[""]
         for keyss in data_aframe.keys() :
             row_header1.extend([keyss , "", "" ,"" ,"" ,"" ,""  ])
         writer.writerow(row_header1)
 
         # Write the second header line
-        writer.writerow(["X","std_X" ,"Y","std_Y", "Z", "std_Z","Split_line"] * len(data_aframe.keys()))
+        a11=["percent cycle"]
+        a11.extend(["X","std_X" ,"Y","std_Y", "Z", "std_Z","Split_line"] * len(data_aframe.keys()))
+        writer.writerow(a11)
         
         for i in range(100) :
-            row1=[]
+            row1=[i]
             for keys in data_aframe.keys() :
                 a=data_aframe[keys]
                 for keyss in a.keys():
