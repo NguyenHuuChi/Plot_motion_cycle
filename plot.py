@@ -489,6 +489,7 @@ def plot_average_with_error(interp_data_cycle,split_cycle,title1,save_folder,sub
     plt.ylabel('Angle (degree)',size=20, labelpad=25)
     plt.title(f"{title1}_STD",size=25)
     plt.legend()
+    
     # Create the save folder if it doesn't exist
     if not os.path.exists(subfolder_name_std):
         os.makedirs(subfolder_name_std)
@@ -506,6 +507,7 @@ def plot_all_data(All_data,folder):
     subfolder_name = "GraphXXXXXXXXX" 
     subfolder_name_std="GraphXXXXXXXX__STD"
     subfolder_path = os.path.join(folder, subfolder_name)
+    subfolder_path_std = os.path.join(folder, subfolder_name_std)
     while index < len(list_key) -1 :
         key_left=list_key[index]
         key_right= list_key[index+1]
@@ -520,7 +522,7 @@ def plot_all_data(All_data,folder):
                 left_leg= interp_shampe_many_data(All_data[key_left][i])
                 right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_path_std)
         elif key_left[1:]== "AnkleAngles" :
             for i in range(len(All_data[list_key[index]])-1) :
                 if i==0:
@@ -532,7 +534,7 @@ def plot_all_data(All_data,folder):
                 left_leg= interp_shampe_many_data(All_data[key_left][i])
                 right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_path_std)
         else :
 
             for i in range(len(All_data[list_key[index]])-1) :
@@ -545,7 +547,7 @@ def plot_all_data(All_data,folder):
                 left_leg= interp_shampe_many_data(All_data[key_left][i])
                 right_leg=interp_shampe_many_data(All_data[key_right][i])
 
-                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_name_std)
+                plot_average_with_error([left_leg,right_leg],[All_data[key_left][-1],All_data[key_right][-1]],title,subfolder_path,subfolder_path_std)
         index+=2
 
 
